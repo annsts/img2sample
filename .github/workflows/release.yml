@@ -1,0 +1,53 @@
+name: Release
+
+# Build the macOS .pkg and attach it to a GitHub Release when a vX.Y.Z tag is pushed.
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14   # Apple Silicon
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build plugin (Release)
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release -j"$(sysctl -n hw.ncpu)"
+
+      - name: Build .pkg installer
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: bash scripts/package.sh
+
+      - name: Upload .pkg as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: img2sample-pkg
+          path: dist/*.pkg
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: img2sample ${{ github.ref_name }}
+          files: dist/*.pkg
+          generate_release_notes: true
+          body: |
+            macOS (Apple Silicon) installer for img2sample.
+
+            The `.pkg` is unsigned / not notarized — on the target Mac,
+            right-click the `.pkg` and choose **Open** to bypass Gatekeeper.
+
+            Installs:
+            - `img2sample.vst3` → `/Library/Audio/Plug-Ins/VST3`
+            - `img2sample.component` (Audio Unit) → `/Library/Audio/Plug-Ins/Components`
+            - `img2sample.app` → `/Applications`
+
+            First run needs a Gemini API key (https://aistudio.google.com/apikey).
