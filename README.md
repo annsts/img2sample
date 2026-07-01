@@ -1,14 +1,18 @@
 # img2sample
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-black.svg)]()
+[![Web Demo](https://img.shields.io/badge/Web%20Demo-pink.svg)](https://annsts.github.io/img2sample/)
+
 A DAW plugin that translates images into sound. Drop a photo, painting, or texture — its colors, mood, and energy become an audio sample you can drag straight onto a track.
 
 The interface is built around element and mood tags — tap "drums" and the prompt expands to "raw drum pattern, no melodic instruments, no vocals, percussion only." This makes it easy to generate isolated stems (vocals, bass, guitar, synth pads, textures, foley) rather than full mixes. All tags are editable.
 
 https://github.com/user-attachments/assets/96572499-cf83-4259-a61c-3d02857124fe
 
-*Browser preview — the same UI runs inside the DAW plugin as a WebView.*
+Available as **VST3**, **Audio Unit**, and **Standalone** on macOS (Apple Silicon). Also runs in the browser — **[try the web demo](https://annsts.github.io/img2sample/)**.
 
-Available as **VST3**, **Audio Unit**, and **Standalone** on macOS (Apple Silicon). Powered by Google's [Lyria](https://deepmind.google/models/lyria/) models via the Gemini API.
+Powered by Google's [Lyria](https://deepmind.google/models/lyria/) models via the Gemini API.
 
 ## Why
 
@@ -17,22 +21,20 @@ Musicians already think visually — mood boards, album art, color palettes. img
 ## How It Works
 
 1. **Open** the plugin in your DAW (or run standalone).
-2. **Paste** a Gemini API key (get one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
+2. **Paste** a Gemini API key (free tier at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
 3. **Drop** an image and optionally type a prompt; pick element/mood tags; set BPM, key, seed.
 4. **Generate** — returns an audio sample.
 5. **Drag** onto a track or **save .wav**.
 
-Two generation modes: **clip** and **full track**.
+Two generation modes: **clip** (short sample) and **full track**.
 
-## Requirements
+## Download
 
-- macOS 12+ (Apple Silicon)
-- [Gemini API key](https://aistudio.google.com/apikey) (free tier available)
-- Internet connection
+Grab the latest `.pkg` from [**Releases**](https://github.com/annsts/img2sample/releases).
 
-## Install
+The installer is ad-hoc signed (not notarized). After downloading, right-click the `.pkg` and choose **Open** to bypass Gatekeeper. Installs the VST3, Audio Unit, and Standalone app.
 
-Ad-hoc signed (not notarized) — remove quarantine after download:
+Or remove quarantine after download:
 
 ```bash
 xattr -dr com.apple.quarantine img2sample.vst3 img2sample.component img2sample.app
@@ -42,11 +44,11 @@ cp -R img2sample.component ~/Library/Audio/Plug-Ins/Components/
 open img2sample.app  # standalone
 ```
 
-Rescan plugins in your DAW. AU may need a fresh DAW launch.
+**Requirements:** macOS 12+, Apple Silicon, [Gemini API key](https://aistudio.google.com/apikey), internet connection.
 
 ## Build from Source
 
-Requires CMake 3.22+ and Xcode command line tools (C++17).
+Requires CMake 3.22+ and Xcode command-line tools (C++17).
 
 ```bash
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release

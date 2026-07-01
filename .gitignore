@@ -7,12 +7,7 @@ cmake-build-*/
 *.component
 *.aaxplugin
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-*.egg-info/
+# Installers
 dist/
 
 # IDE
@@ -23,15 +18,13 @@ dist/
 *~
 .DS_Store
 
-# Generated audio
-backend/outputs/
-
 # JUCE
 JuceLibraryCode/
 Builds/
 .cache/
 
-# Local notes & preview media
+# Local
 NEXT_STEPS.md
 preview*.mp4
 preview*.png
+img2sample_preview.*
