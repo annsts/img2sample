@@ -1717,10 +1717,10 @@
       img.onload = () => {
         const imgRatio = img.width / img.height;
         const screenRatio = window.innerWidth / window.innerHeight;
-        const isClose = Math.abs(imgRatio - screenRatio) < 0.4;
+        const canCover = Math.abs(imgRatio - screenRatio) < 0.15;
         const bgSharp = document.getElementById('bgSharp');
         bgSharp.style.backgroundImage = `url(${full})`;
-        if (isClose) {
+        if (canCover) {
           bgSharp.style.backgroundSize = 'cover';
           bgSharp.style.backgroundRepeat = 'no-repeat';
         } else {
@@ -2072,9 +2072,16 @@
     isPlaying ? stopPlayback() : startPlayback();
   }
 
-  function startPlayback() {
+  async function startPlayback() {
     if (!audioBuffer || !audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    if (sourceNode) {
+      sourceNode.onended = null;
+      try { sourceNode.stop(); } catch {}
+      sourceNode.disconnect();
+      sourceNode = null;
+    }
 
     if (!analyser) {
       analyser = audioCtx.createAnalyser();
@@ -2119,6 +2126,7 @@
     if (sourceNode) {
       sourceNode.onended = null;
       try { sourceNode.stop(); } catch {}
+      try { sourceNode.disconnect(); } catch {}
       sourceNode = null;
     }
     if (isPlaying && audioCtx) {

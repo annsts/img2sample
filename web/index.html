@@ -819,6 +819,101 @@
     color: #000;
   }
 
+  /* Genre picker */
+  .genre-pill {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 900;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .genre-pill-btn {
+    background: rgba(20, 20, 20, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 5px 12px 5px 9px;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .genre-pill-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .genre-pill-btn .genre-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+    transition: opacity 0.3s, transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  .genre-pill-btn:hover .genre-icon { opacity: 0.8; }
+  .genre-pill.open .genre-pill-btn .genre-icon { opacity: 1; transform: rotate(360deg); }
+  .genre-pill.open .genre-pill-btn { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  .genre-menu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 170px;
+    max-height: 60vh;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+                transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .genre-menu::-webkit-scrollbar { width: 4px; }
+  .genre-menu::-webkit-scrollbar-track { background: transparent; }
+  .genre-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .genre-pill.open .genre-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .genre-item {
+    background: none;
+    border: none;
+    padding: 7px 11px;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 11px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 9px;
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  .genre-pill.open .genre-item {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .genre-item:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .genre-item.active { color: var(--text); background: rgba(255,255,255,0.08); }
+
   /* Generate */
   .gen-row {
     display: flex;
@@ -1316,6 +1411,15 @@
   <div class="history" id="history"></div>
 </div>
 
+<!-- Genre picker pill -->
+<div class="genre-pill" id="genrePill">
+  <button class="genre-pill-btn" onclick="toggleGenreMenu()">
+    <svg class="genre-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+    <span id="genreLabel">default</span>
+  </button>
+  <div class="genre-menu" id="genreMenu"></div>
+</div>
+
 <!-- Visualizer floating bar -->
 <div class="viz-bar" id="vizBar">
   <button class="viz-play" id="vizPlayBtn" onclick="togglePlay()">
@@ -1383,6 +1487,271 @@
     { label: 'minimal', prompt: 'minimal, sparse, clean' },
     { label: 'aggressive', prompt: 'aggressive, distorted, harsh' },
   ];
+
+  const GENRE_PRESETS = {
+    'default': {
+      elements: DEFAULT_ELEMENTS,
+      moods: DEFAULT_MOODS,
+    },
+    'rage / plugg': {
+      elements: [
+        { label: 'rage synth', prompt: 'bright detuned saw synth chords, buzzy digital lead energy, wide stereo, aggressive and glossy, no drums, no vocals, no acoustic instruments' },
+        { label: 'filthy 808', prompt: 'distorted 808 bass, clipped sub, hard saturation, speaker-rattling low end, no drums, no melody, bass only' },
+        { label: 'plugg bells', prompt: 'soft plugg bell loop, airy, dreamy, simple catchy phrase, no drums, no bass, no vocals' },
+        { label: 'alien arp', prompt: 'weird synthetic arpeggio, spacey, pitch-bent, digital, hypnotic, no drums, no bass, no vocals' },
+        { label: 'rage chords', prompt: 'huge bright rage chords, detuned supersaw stack, emotional but aggressive, no drums, no bass, no vocals' },
+        { label: 'video game', prompt: 'shiny video-game-like synth melody, playful digital lead, bright and catchy, no drums, no bass, no vocals' },
+        { label: '808 bounce', prompt: 'trap drum bounce with hard kick, snare, fast hats, space for 808, no melody, no vocals' },
+        { label: 'pluggnb keys', prompt: 'glossy pluggnb electric keys, smooth R&B-like chords, soft bounce, no drums, no bass, no vocals' },
+      ],
+      moods: [
+        { label: 'blown out', prompt: 'clipped distorted texture, saturated digital loudness, aggressive crushed sound, no clean hi-fi polish' },
+        { label: 'dark plugg', prompt: 'dark plugg melody, minor bells and keys, sparse, cold, underground' },
+        { label: 'glossy', prompt: 'glossy, polished, bright digital sheen' },
+        { label: 'aggressive', prompt: 'aggressive, distorted, harsh' },
+        { label: 'spacey', prompt: 'spacey, floating, wide reverb, distant' },
+        { label: 'evil', prompt: 'evil, sinister, menacing, dark minor' },
+      ],
+    },
+    'jersey club': {
+      elements: [
+        { label: 'bed squeak', prompt: 'squeaky-bed percussion hit, short rhythmic squeak accent, Jersey Club flavor, no melody, no vocals, percussion only' },
+        { label: '5-count', prompt: 'Jersey Club 5-count kick bounce, hard club kicks, fast repetitive pattern, no melody, no bass, no vocals' },
+        { label: 'club kicks', prompt: 'bouncy Jersey Club kick pattern, punchy low drums, syncopated club rhythm, no melody, no vocals' },
+        { label: 'chopped vocals', prompt: 'chopped vocal stabs, pitched syllables, rhythmic call-and-response, no full lyrics, no lead vocal' },
+        { label: 'squeak loop', prompt: 'repeated bed-squeak rhythm loop, tight and percussive, no drums besides squeak, no melody, no vocals' },
+        { label: 'kick rolls', prompt: 'rapid Jersey Club kick rolls, drum fills, fast edits, no melody, no bass, no vocals' },
+        { label: 'chant chops', prompt: 'short chant-like vocal chops, hype stabs, rhythmic vocal cuts, no readable lyrics, no lead vocal' },
+      ],
+      moods: [
+        { label: 'jersey bounce', prompt: 'full Jersey Club drum groove, kicks, claps, squeak accents, energetic dance bounce' },
+        { label: 'dark jersey', prompt: 'dark Jersey Club groove, minor chopped vocals, heavy kicks, tense atmosphere' },
+        { label: 'brick bounce', prompt: 'raw gritty Jersey Club bounce, dry drums, hard kicks, claps, club energy, no polished pop sound' },
+        { label: 'hype', prompt: 'high energy, hype, crowd-moving, fast' },
+        { label: 'raw', prompt: 'raw unpolished sound, minimal mastering, no glossy commercial finish' },
+      ],
+    },
+    'drill': {
+      elements: [
+        { label: 'slide 808', prompt: 'sliding drill 808 bass, aggressive glides, sub-heavy movement, no drums, no melody, no vocals, bass only' },
+        { label: 'dark piano', prompt: 'dark drill piano loop, cold minor notes, sparse, tense, no drums, no bass, no vocals' },
+        { label: 'drill flute', prompt: 'eerie drill flute melody, haunting minor phrase, airy and cold, no drums, no bass, no vocals' },
+        { label: 'icy strings', prompt: 'cold string stabs, dark orchestral drill melody, cinematic tension, no drums, no bass, no vocals' },
+        { label: 'drill hats', prompt: 'rapid drill hi-hats, rolls, triplets, stutters, sharp timing, no kick, no snare, no melody' },
+        { label: 'snare snap', prompt: 'crisp drill snare and clap hits, sharp dry backbeat, no melody, no bass, no vocals' },
+        { label: 'ghost loop', prompt: 'ghostly drill melody loop, sparse bells or piano, lots of negative space, no drums, no bass, no vocals' },
+      ],
+      moods: [
+        { label: 'cold', prompt: 'cold minor drill loop, dark atmosphere, minimal repetition' },
+        { label: 'menacing', prompt: 'menacing, threatening, dark, tense' },
+        { label: 'drill bounce', prompt: 'drill drum bounce, syncopated kick and snare pattern, dark aggressive pocket' },
+        { label: 'glides', prompt: 'long 808 pitch glides, dark sub bass, menacing low-end motion' },
+        { label: 'sparse', prompt: 'sparse, lots of silence, negative space, minimal elements' },
+      ],
+    },
+    'hyperpop': {
+      elements: [
+        { label: 'glitch vox', prompt: 'glitchy vocal chops, pitched fragments, stutters, formant shifts, no full lyrics, no natural lead vocal' },
+        { label: 'bubble lead', prompt: 'bubbly hyperpop synth lead, glossy, bright, playful, no drums, no bass, no vocals' },
+        { label: 'sparkle chords', prompt: 'sparkly digital synth chords, glittery highs, wide and shiny, no drums, no bass, no vocals' },
+        { label: 'crushed drums', prompt: 'hyper-compressed digital drums, snappy kick, sharp clap, glitch fills, no melody, no vocals' },
+        { label: 'formant bass', prompt: 'rubbery formant bass, vocal-like synthetic low end, talking movement, no drums, no melody, no vocals' },
+        { label: 'pixel lead', prompt: 'pixelated synth lead, chiptune-like tone, bright digital melody, no drums, no bass, no vocals' },
+      ],
+      moods: [
+        { label: 'bitcrushed', prompt: 'bitcrushed digital distortion, crunchy low-resolution texture, broken and synthetic, no clean hi-fi sound' },
+        { label: 'nightcore', prompt: 'sped-up bright pop texture, pitched-up synthetic feel, fast energetic motion, no slow tempo, no acoustic realism' },
+        { label: 'sugar rush', prompt: 'sugary, sweet, hyper-bright, overwhelming sweetness' },
+        { label: 'glitch drop', prompt: 'sudden glitch drop, stutters, hard cuts, digital noise bursts, chaotic transition' },
+        { label: 'internet noise', prompt: 'chaotic internet-core texture, digital artifacts, glitches, compression, noisy sparkle, no clean acoustic sound' },
+      ],
+    },
+    'ambient': {
+      elements: [
+        { label: 'drone', prompt: 'deep sustained drone, slow evolving tone, immersive, no rhythm, no melody, no vocals' },
+        { label: 'raw texture', prompt: 'raw ambient texture, atmospheric sound design, no rhythm, no melody, no vocals, texture only' },
+        { label: 'field noise', prompt: 'field-recording-like noise, air, room tone, distant environmental detail, no instruments, no beat' },
+        { label: 'frozen pad', prompt: 'frozen reverb pad, long suspended tail, still atmosphere, no drums, no bassline, no vocals' },
+        { label: 'sub drone', prompt: 'low sub drone, deep pressure, minimal movement, dark atmosphere, no drums, no melody, no vocals' },
+        { label: 'soft static', prompt: 'warm filtered static, soft noise bed, quiet atmosphere, no rhythm, no melody, no vocals' },
+      ],
+      moods: [
+        { label: 'granular', prompt: 'granular cloud texture, tiny chopped grains, smeared sound, floating stereo movement, no clear melody, no drums' },
+        { label: 'tape rot', prompt: 'degraded tape texture, wow and flutter, hiss, warble, soft saturation, no clean digital polish' },
+        { label: 'metal scrape', prompt: 'metallic scraping texture, resonant metal hits, long reverb, no steady rhythm, no melody' },
+        { label: 'mangled', prompt: 'mangled audio texture, reversed fragments, warped processing, unstable pitch, no clean musical phrase' },
+        { label: 'still', prompt: 'still, barely moving, suspended, frozen in time' },
+      ],
+    },
+    'phonk': {
+      elements: [
+        { label: 'cowbell', prompt: 'distorted phonk cowbell melody, dark minor loop, repetitive hook, no drums, no bass, no vocals' },
+        { label: 'drift 808', prompt: 'distorted drift-phonk 808 bass, aggressive low end, driving energy, no drums, no melody, bass only' },
+        { label: 'phonk drums', prompt: 'hard phonk drum pattern, punchy kick, crunchy snare, raw bounce, no melody, no vocals' },
+        { label: 'evil bell', prompt: 'evil metallic bell melody, dark minor notes, hypnotic repetition, no drums, no bass, no vocals' },
+        { label: 'tape phonk', prompt: 'tape-worn phonk sound, hissy, muffled, saturated, gritty, no modern glossy polish' },
+        { label: 'dirt bass', prompt: 'dirty distorted bass, gritty low end, aggressive saturation, no drums, no melody, bass only' },
+      ],
+      moods: [
+        { label: 'memphis dust', prompt: 'dusty old-school phonk texture, tape hiss, gritty darkness, muffled sample feel, no clean polish' },
+        { label: 'clipped', prompt: 'clipped distorted master texture, loud, crunchy, saturated, no clean dynamics' },
+        { label: 'car edit', prompt: 'fast drift-phonk rhythm, driving pulse, aggressive motion, no soft ambient pacing, no vocals' },
+        { label: 'dark', prompt: 'dark, moody, sinister' },
+        { label: 'aggressive', prompt: 'aggressive, distorted, harsh' },
+      ],
+    },
+    'breakcore': {
+      elements: [
+        { label: 'amen chop', prompt: 'chopped breakbeat drums, frantic snare edits, fast cuts, no melody, no bass, no vocals' },
+        { label: 'breaks', prompt: 'fast breakbeat loop, sliced drums, rolling percussion, no melody, no bass, no vocals' },
+        { label: 'jungle sub', prompt: 'deep jungle sub bass, rolling low end, warm pressure, no drums, no melody, bass only' },
+        { label: 'rave stab', prompt: 'sharp rave synth stab, short chord hit, high-energy, no drums, no bass, no vocals' },
+        { label: 'chaos drums', prompt: 'chaotic breakcore drums, dense fills, distorted transients, frantic energy, no melody, no vocals' },
+        { label: 'hardcore kick', prompt: 'distorted hardcore kick, heavy impact, aggressive low punch, no melody, no vocals' },
+      ],
+      moods: [
+        { label: 'drum edits', prompt: 'aggressive drum edits, stutters, reverses, hard cuts, no melody, no vocals' },
+        { label: 'soft breaks', prompt: 'emotional fast breaks, airy pads, washed-out atmosphere, no harsh distortion, no vocals' },
+        { label: 'glitch tears', prompt: 'emotional glitch texture, sad pads, chopped artifacts, noisy atmosphere, no clean pop polish' },
+        { label: 'chaotic', prompt: 'chaotic, frantic, dense, overwhelming' },
+        { label: 'jungle roll', prompt: 'rolling jungle drum groove, fast breakbeats, syncopated snares' },
+      ],
+    },
+    'deconstructed club': {
+      elements: [
+        { label: 'broken kick', prompt: 'broken club kick pattern, irregular low hits, unstable rhythm, no steady four-on-the-floor, no melody' },
+        { label: 'metal hits', prompt: 'metallic percussion hits, clangs, resonant impacts, harsh transients, no melody, no vocals' },
+        { label: 'sub pressure', prompt: 'deep sub pressure, sparse bass pulses, physical low end, no melody, no drums, bass only' },
+        { label: 'alien perc', prompt: 'alien synthetic percussion, rubbery hits, weird clicks, no melody, no bass, no vocals' },
+        { label: 'impact hits', prompt: 'heavy club impact hits, distorted one-shots, sharp transient attacks, no melody, no vocals' },
+      ],
+      moods: [
+        { label: 'club debris', prompt: 'fragmented club sound design, chopped drums, noise bursts, broken rhythm, no clean groove' },
+        { label: 'industrial', prompt: 'industrial club texture, harsh drums, metallic reverb, distorted bass, no soft ambience' },
+        { label: 'empty club', prompt: 'sparse experimental club atmosphere, heavy negative space, distant impacts, no full melody, no vocals' },
+        { label: 'hard swerves', prompt: 'abrupt rhythmic swerves, sudden stops, unexpected impacts, no smooth arrangement' },
+        { label: 'glitch floor', prompt: 'glitchy club rhythm, broken drums, digital artifacts, bass hits, no clean pop structure' },
+      ],
+    },
+    'amapiano': {
+      elements: [
+        { label: 'log drum', prompt: 'resonant amapiano log drum bass, hollow low hits, syncopated movement, no melody, no vocals' },
+        { label: 'shakers', prompt: 'layered shaker groove, rolling top percussion, light rhythmic motion, no melody, no bass, no vocals' },
+        { label: 'perc stack', prompt: 'stacked Afro-house percussion, shakers, rims, soft claps, syncopated groove, no melody, no bass' },
+        { label: 'piano bounce', prompt: 'warm amapiano piano chords, soft rhythmic bounce, relaxed dance feel, no drums, no bass, no vocals' },
+        { label: 'marimba', prompt: 'warm marimba-like melody, percussive mallet notes, sunny and rhythmic, no drums, no bass, no vocals' },
+        { label: 'sunset pad', prompt: 'warm Afro-house pad, smooth uplifting atmosphere, wide and soft, no drums, no bass, no vocals' },
+      ],
+      moods: [
+        { label: 'deep log', prompt: 'deep dark log drum pattern, heavy resonant bass hits' },
+        { label: 'afro swing', prompt: 'organic Afro-house rhythmic swing, percussion-led groove' },
+        { label: 'warm', prompt: 'warm, analog, sunny' },
+        { label: 'chant chop', prompt: 'short Afro-house chant chop, rhythmic vocal accent, no full lyrics, no lead vocal' },
+        { label: 'rim groove', prompt: 'rimshot-led Afro-house groove, syncopated percussion, clean bounce' },
+      ],
+    },
+    'uk garage': {
+      elements: [
+        { label: '2-step', prompt: 'UK garage two-step drum groove, skipped kicks, tight snare, swung rhythm, no melody, no bass, no vocals' },
+        { label: 'garage bass', prompt: 'bouncy UK garage bassline, short rubbery notes, warm low end, no drums, no melody, bass only' },
+        { label: 'vocal cut', prompt: 'chopped garage vocal cut, short pitched phrase, rhythmic and soulful, no full lyrics, no lead vocal' },
+        { label: 'organ stab', prompt: 'garage organ stab, short chord hit, upbeat club feel, no drums, no bass, no vocals' },
+        { label: 'shuffle hats', prompt: 'shuffled garage hi-hats, swung top rhythm, bouncy percussion, no kick, no snare, no melody' },
+        { label: 'speed bass', prompt: 'speed-garage bass pressure, heavy bouncy low end, darker club energy, no drums, no melody' },
+      ],
+      moods: [
+        { label: 'skippy', prompt: 'skippy garage drums, syncopated kick and snare pattern, shuffled feel' },
+        { label: 'late night', prompt: 'smooth late-night garage chords, warm emotional keys' },
+        { label: 'swing', prompt: 'swung UK garage groove, loose timing, bouncy shuffle' },
+        { label: 'warm', prompt: 'warm, analog, soulful' },
+        { label: 'rim bounce', prompt: 'offbeat rimshot bounce, shuffled garage rhythm' },
+      ],
+    },
+    'cloud rap': {
+      elements: [
+        { label: 'cloud pad', prompt: 'soft cloudy pad, airy atmosphere, dreamy harmony, no drums, no bass, no vocals' },
+        { label: 'sad guitar', prompt: 'melancholic guitar loop, simple emotional phrase, reverb, no drums, no bass, no vocals' },
+        { label: 'rain keys', prompt: 'rainy soft keys, minor chords, reflective mood, no drums, no bass, no vocals' },
+        { label: 'dream bells', prompt: 'dreamy bell melody, soft reverb, floating loop, no drums, no bass, no vocals' },
+        { label: 'lo-fi 808', prompt: 'warm lo-fi 808 bass, soft saturation, mellow low end, no drums, no melody, bass only' },
+        { label: 'soft pluck', prompt: 'soft plucked melody, gentle synth or guitar pluck, intimate, no drums, no bass, no vocals' },
+      ],
+      moods: [
+        { label: 'washed', prompt: 'washed vocal-like texture, distant chopped phrase, no clear lyrics' },
+        { label: 'midnight', prompt: 'midnight trap atmosphere, hazy keys, dark soft loop' },
+        { label: 'dust', prompt: 'dusty lo-fi texture, muffled, warm, degraded, no clean hi-fi polish' },
+        { label: 'pain loop', prompt: 'sad emo-trap melody loop, minor guitar or keys, simple and emotional' },
+        { label: 'dreamy', prompt: 'dreamy, floaty, soft, distant' },
+      ],
+    },
+    'techno': {
+      elements: [
+        { label: 'rumble kick', prompt: 'techno rumble kick, deep reverb low-end tail, driving pressure, no melody, no vocals' },
+        { label: 'perc loop', prompt: 'techno percussion loop, hats, rims, shakers, no kick, no bass, no melody' },
+        { label: 'acid', prompt: 'squelchy acid bassline, resonant filter movement, hypnotic, no drums, no melody, bass only' },
+        { label: 'stab', prompt: 'short techno stab, sharp chord hit, hypnotic repetition, no drums, no bass, no vocals' },
+        { label: 'offbeat hat', prompt: 'offbeat open hat pattern, driving techno pulse, no melody, no bass, no vocals' },
+      ],
+      moods: [
+        { label: 'warehouse', prompt: 'dark warehouse ambience, industrial room tone, reverb' },
+        { label: 'hardgroove', prompt: 'hardgroove percussion loop, rolling drums, funky syncopation' },
+        { label: 'machine funk', prompt: 'mechanical synthetic groove, tight percussion, repetitive machine rhythm' },
+        { label: 'peak time', prompt: 'peak-time techno drums, heavy kick, driving rhythm, high pressure' },
+        { label: 'loopy', prompt: 'hypnotic loop, repetitive club phrase, minimal variation, no full arrangement' },
+      ],
+    },
+    'baile funk': {
+      elements: [
+        { label: 'tamborzão', prompt: 'heavy baile funk tamborzão drum rhythm, punchy low percussion, raw groove, no melody, no vocals' },
+        { label: 'funk drums', prompt: 'baile funk drum loop, hard kicks, claps, syncopated percussion, no melody, no bass, no vocals' },
+        { label: 'vocal chant', prompt: 'short chant-like vocal chops, rhythmic hype callouts, no full lyrics, no lead vocal' },
+        { label: 'siren', prompt: 'siren-like synth effect, short hype sound, no drums, no bass, no vocals' },
+        { label: 'rave funk', prompt: 'electronic baile funk energy, hard drums, bright synth stabs, no full vocal, no soft ambience' },
+      ],
+      moods: [
+        { label: 'raw loop', prompt: 'raw baile funk loop, gritty, minimal, percussive, no polished pop arrangement' },
+        { label: 'percussive', prompt: 'dense syncopated percussion groove, dry hits, body-moving rhythm' },
+        { label: 'montagem', prompt: 'chopped baile funk arrangement feel, fast edits, vocal cuts, drum switches, no full song structure' },
+        { label: 'hype', prompt: 'high energy, hype, fast, crowd-moving' },
+        { label: 'gritty', prompt: 'gritty, raw, unpolished, street energy' },
+      ],
+    },
+  };
+
+  let currentGenre = 'default';
+
+  function toggleGenreMenu() {
+    document.getElementById('genrePill').classList.toggle('open');
+  }
+
+  function renderGenreMenu() {
+    const menu = document.getElementById('genreMenu');
+    const keys = Object.keys(GENRE_PRESETS);
+    menu.innerHTML = keys.map((key, i) =>
+      `<button class="genre-item${key === currentGenre ? ' active' : ''}" style="transition-delay:${i * 25}ms" onclick="selectGenre('${key}')">${key}</button>`
+    ).join('');
+  }
+
+  function selectGenre(key) {
+    currentGenre = key;
+    const preset = GENRE_PRESETS[key];
+    localStorage.setItem('img2sample_elements', JSON.stringify(preset.elements));
+    localStorage.setItem('img2sample_moods', JSON.stringify(preset.moods));
+    document.querySelectorAll('.tag.active').forEach(t => t.classList.remove('active'));
+    promptInput.value = '';
+    autoResize();
+    renderTags();
+    renderGenreMenu();
+    document.getElementById('genreLabel').textContent = key;
+    document.getElementById('genrePill').classList.remove('open');
+  }
+
+  document.addEventListener('click', (e) => {
+    const pill = document.getElementById('genrePill');
+    if (pill && !pill.contains(e.target)) pill.classList.remove('open');
+  });
+
+  renderGenreMenu();
 
   function loadPresets() {
     try {
@@ -1932,9 +2301,17 @@
     isPlaying ? stopPlayback() : startPlayback();
   }
 
-  function startPlayback() {
+  async function startPlayback() {
     if (!audioBuffer || !audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    // Clean up previous source if lingering
+    if (sourceNode) {
+      sourceNode.onended = null;
+      try { sourceNode.stop(); } catch {}
+      sourceNode.disconnect();
+      sourceNode = null;
+    }
 
     // Setup analyser for reactive visuals
     if (!analyser) {
@@ -1975,6 +2352,7 @@
     if (sourceNode) {
       sourceNode.onended = null;
       try { sourceNode.stop(); } catch {}
+      try { sourceNode.disconnect(); } catch {}
       sourceNode = null;
     }
     if (isPlaying && audioCtx) {

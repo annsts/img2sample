@@ -74,24 +74,89 @@ pkgbuild \
     --install-location "/" \
     "$COMP/img2sample.pkg"
 
+RESOURCES="$DIST/resources"
+mkdir -p "$RESOURCES"
+
+cat > "$RESOURCES/welcome.html" <<'WELCOME'
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #1d1d1f;
+    padding: 0;
+    margin: 0;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.2px;
+  }
+  p {
+    margin: 0 0 14px 0;
+  }
+  .dim {
+    color: #86868b;
+    font-size: 12px;
+  }
+  table {
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12px;
+    width: 100%;
+  }
+  td {
+    padding: 4px 0;
+    vertical-align: top;
+  }
+  td:first-child {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    white-space: nowrap;
+    padding-right: 16px;
+    color: #1d1d1f;
+  }
+  td:last-child {
+    color: #86868b;
+  }
+  .req {
+    font-size: 11px;
+    color: #86868b;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e5e5;
+  }
+</style>
+</head>
+<body>
+  <h1>img2sample</h1>
+  <p>Turn images into audio samples. Drop a photo, painting, or texture &mdash; its colors, mood, and energy become an audio sample you can drag straight onto a track.</p>
+  <p>Shape the output with element and mood tags, set BPM and key, and generate isolated stems (vocals, bass, drums, guitar, synth pads, textures, foley).</p>
+  <p class="dim">Powered by Google&rsquo;s Lyria models via the Gemini API.</p>
+
+  <table>
+    <tr><td>img2sample.vst3</td><td>/Library/Audio/Plug-Ins/VST3</td></tr>
+    <tr><td>img2sample.component</td><td>/Library/Audio/Plug-Ins/Components</td></tr>
+    <tr><td>img2sample.app</td><td>/Applications</td></tr>
+  </table>
+
+  <p class="dim">After installing, rescan plugins in your DAW. You&rsquo;ll need a free Gemini API key on first run &mdash; get one at <b>aistudio.google.com/apikey</b>.</p>
+
+  <p class="req">macOS 12+ &middot; Apple Silicon</p>
+</body>
+</html>
+WELCOME
+
 # Distribution wrapper (gives the nice installer UI + arch hint).
 cat > "$DIST/distribution.xml" <<DISTXML
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
     <title>img2sample ${VERSION}</title>
-    <welcome mime-type="text/plain"><![CDATA[
-img2sample — Image to Audio Sample Plugin
-
-Installs:
-  - img2sample.vst3      -> /Library/Audio/Plug-Ins/VST3
-  - img2sample.component -> /Library/Audio/Plug-Ins/Components (Audio Unit)
-  - img2sample.app       -> /Applications
-
-After installing, rescan plugins in your DAW. You'll need a Gemini API key
-on first run (https://aistudio.google.com/apikey).
-
-Apple Silicon, macOS 12+.
-    ]]></welcome>
+    <welcome file="welcome.html" mime-type="text/html"/>
     <options require-scripts="false" hostArchitectures="arm64"/>
     <choices-outline>
         <line choice="default"/>
@@ -106,10 +171,11 @@ DISTXML
 productbuild \
     --distribution "$DIST/distribution.xml" \
     --package-path "$COMP" \
+    --resources "$RESOURCES" \
     --version "$VERSION" \
     "$OUT"
 
-rm -rf "$ROOT" "$COMP" "$DIST/distribution.xml"
+rm -rf "$ROOT" "$COMP" "$RESOURCES" "$DIST/distribution.xml"
 
 echo ""
 echo "  Installer: $OUT"

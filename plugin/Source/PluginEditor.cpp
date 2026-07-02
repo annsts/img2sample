@@ -55,8 +55,9 @@ Img2SampleEditor::Img2SampleEditor (Img2SampleProcessor& p)
         webView.goToURL (url);
     }
 
-    // Set resizable with aspect ratio
+    // Set resizable with aspect ratio and minimum size
     setResizable (true, true);
+    constrainer.setMinimumSize (420, 570);
     constrainer.setFixedAspectRatio (560.0 / 760.0);
     setConstrainer (&constrainer);
 }
